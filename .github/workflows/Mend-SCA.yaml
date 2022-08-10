@@ -1,0 +1,34 @@
+name: Mend SCA
+on:
+  push:
+    branches: [ mend-sca-qualitygate ]
+  pull_request:
+    branches: [ mend-sca-qualitygate ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    - run: pip install -r requirements.txt
+    - name: WhiteSource Unified Agent Scan
+      env:
+        WS_APIKEY: ${{secrets.SCA_APIKEY}}
+        WS_WSS_URL: https://saas-eu.whitesourcesoftware.com/agent
+        WS_PRODUCTNAME: GHActions_${{github.event.repository.name}}
+        WS_PROJECTNAME: ${{github.ref}}
+        WS_RESOLVEALLDEPENDENCIES: false
+        WS_PYTHON_RESOLVEDEPENDENCIES: true
+        WS_FILESYSTEMSCAN: true
+        WS_PYTHON_INSTALLVIRTUALENV: true
+        WS_GENERATEPROJECTDETAILSJSON: true
+        WS_CHECKPOLICIES: true
+      run: |
+        curl -LJO https://unified-agent.s3.amazonaws.com/wss-unified-agent.jar
+        echo Unified Agent downloaded successfully
+        java -jar wss-unified-agent.jar
